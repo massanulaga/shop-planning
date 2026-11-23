@@ -1,0 +1,2 @@
+# shop-planning
+Planning repository
