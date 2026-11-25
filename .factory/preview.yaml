@@ -1,0 +1,21 @@
+stacks:
+  wishlist:
+    stock:
+      db: { use: postgres-16, env: { POSTGRES_PASSWORD: preview, POSTGRES_DB: saleor } }
+    services:
+      api:
+        repo: massanulaga/saleor
+        port: 8000
+        health: /health/
+        env:
+          DATABASE_URL: postgres://postgres:preview@${db.host}:5432/saleor
+          SECRET_KEY: preview-only-not-for-production
+          ALLOWED_HOSTS: "*"
+          ALLOWED_CLIENT_HOSTS: "*"
+        setup:
+          - python manage.py migrate
+      storefront:
+        repo: massanulaga/storefront
+        port: 3000
+        health: /
+        build-args: { NEXT_PUBLIC_SALEOR_API_URL: "${api.public}/graphql/", NEXT_PUBLIC_DEFAULT_CHANNEL: default-channel }
