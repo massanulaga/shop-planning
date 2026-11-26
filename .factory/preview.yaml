@@ -12,6 +12,8 @@ stacks:
           SECRET_KEY: preview-only-not-for-production
           ALLOWED_HOSTS: "*"
           ALLOWED_CLIENT_HOSTS: "*"
+          # Saleor stamps login tokens with this address; the storefront only sends a token to the API address it was issued for.
+          PUBLIC_URL: ${api.public}
         setup:
           - python manage.py migrate
           # Sample shop data so the preview has products, channels and test shoppers (Saleor's default sample password).
