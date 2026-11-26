@@ -14,9 +14,9 @@ stacks:
           ALLOWED_CLIENT_HOSTS: "*"
         setup:
           - python manage.py migrate
-          # Sample shop data so the preview has products, channels and test shoppers (preview-only password).
+          # Sample shop data so the preview has products, channels and test shoppers (Saleor's default sample password).
           # --withoutimages: the container user can't write /app/media. Safe to run twice.
-          - python manage.py populatedb --withoutimages --user_password preview-shopper
+          - python manage.py populatedb --withoutimages
       storefront:
         repo: massanulaga/storefront
         port: 3000
