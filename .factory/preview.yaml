@@ -16,11 +16,17 @@ stacks:
           PUBLIC_URL: ${api.public}
         setup:
           - python manage.py migrate
-          # Sample shop data so the preview has products, channels and test shoppers (Saleor's default sample password).
-          # --withoutimages: the container user can't write /app/media. Safe to run twice.
-          - python manage.py populatedb --withoutimages
+          # Sample shop data so the preview has products (with photos), channels and test shoppers (Saleor's default sample password). Safe to run twice.
+          - python manage.py populatedb
+        # Saleor writes product photos here; the image's folder belongs to another user, so the preview gets its own empty one.
+        writable:
+          - /app/media
       storefront:
         repo: massanulaga/storefront
         port: 3000
         health: /
+        # Next.js writes its page caches here (the image's .next belongs to another user).
+        writable:
+          - /app/.next/server/route-cache
+          - /app/.next/cache
         build-args: { NEXT_PUBLIC_SALEOR_API_URL: "${api.public}/graphql/", NEXT_PUBLIC_DEFAULT_CHANNEL: default-channel }
