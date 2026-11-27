@@ -30,3 +30,36 @@ stacks:
           - /app/.next/server/route-cache
           - /app/.next/cache
         build-args: { NEXT_PUBLIC_SALEOR_API_URL: "${api.public}/graphql/", NEXT_PUBLIC_DEFAULT_CHANNEL: default-channel }
+  # The wishlist's dashboard slice (Saleor API + the staff dashboard). Sign in at the dashboard's address with Saleor's sample admin:
+  # admin@example.com / admin (populatedb --createsuperuser; preview-only sample data).
+  wishlist-dashboard:
+    stock:
+      db: { use: postgres-16, env: { POSTGRES_PASSWORD: preview, POSTGRES_DB: saleor } }
+    services:
+      api:
+        repo: massanulaga/saleor
+        port: 8000
+        health: /health/
+        env:
+          DATABASE_URL: postgres://postgres:preview@${db.host}:5432/saleor
+          SECRET_KEY: preview-only-not-for-production
+          ALLOWED_HOSTS: "*"
+          ALLOWED_CLIENT_HOSTS: "*"
+          # Saleor stamps login tokens with this address; the dashboard only sends a token to the API address it was issued for.
+          PUBLIC_URL: ${api.public}
+        setup:
+          - python manage.py migrate
+          # Sample shop data plus Saleor's sample admin (admin@example.com, Saleor's default sample password). Safe to run twice.
+          - python manage.py populatedb --createsuperuser
+          # Three products on the first sample customer's wishlist (ashley.cook@example.com), so the customer page's Wishlist card has rows. Safe to run twice.
+          - python manage.py shell -c "from saleor.account.models import User, WishlistItem; from saleor.product.models import ProductVariant; u = User.objects.filter(is_staff=False).order_by('email').first(); [WishlistItem.objects.get_or_create(customer=u, variant=v) for v in ProductVariant.objects.order_by('pk')[:3]]"
+        # Saleor writes product photos here; the image's folder belongs to another user, so the preview gets its own empty one.
+        writable:
+          - /app/media
+      dashboard:
+        repo: massanulaga/saleor-dashboard
+        port: 8080
+        health: /dashboard/
+        # A static page that calls the API from the browser (the address is baked in at build time). This Saleor is 3.24, so the
+        # dashboard is built for the 3.24 ("staging") schema; built for the main schema its customer page fails (filterableInStorefront is gone).
+        build-args: { API_URL: "${api.public}/graphql/", FF_USE_STAGING_SCHEMA: "true" }
