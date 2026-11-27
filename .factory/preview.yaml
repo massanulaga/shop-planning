@@ -12,6 +12,8 @@ stacks:
           SECRET_KEY: preview-only-not-for-production
           ALLOWED_HOSTS: "*"
           ALLOWED_CLIENT_HOSTS: "*"
+          # Saleor stamps login tokens with this address; the storefront and the dashboard only send a token to the API address it was issued for.
+          PUBLIC_URL: ${api.public}
         setup:
           - python manage.py migrate
           - python manage.py populatedb --createsuperuser
@@ -25,6 +27,8 @@ stacks:
           - /app/.next/server/route-cache
           - /app/.next/cache
         build-args: { NEXT_PUBLIC_SALEOR_API_URL: "${api.public}/graphql/", NEXT_PUBLIC_DEFAULT_CHANNEL: default-channel }
+        sign-in:
+          - { user: ashley.cook@example.com, password: password }
       dashboard:
         repo: massanulaga/saleor-dashboard
         port: 80
